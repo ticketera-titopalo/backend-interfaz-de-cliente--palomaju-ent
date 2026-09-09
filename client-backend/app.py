@@ -3,19 +3,18 @@ from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from dotenv import load_dotenv
-from sqlalchemy import text
+from sqlalchemy import text # Para el health check
+from datetime import datetime # Para manejar fechas si decides usar DateTime
 
-# 1. Cargar variables de entorno
+# Cargar variables de entorno
 load_dotenv(dotenv_path="../.env")
 
 print("--- INICIANDO CONFIGURACIÓN DEL SERVIDOR ---")
 
 app = Flask(__name__)
-
-# Configuración de CORS
 CORS(app, resources={r"/api/*": {"origins": "http://localhost:5173"}})
 
-# Configuración de la Base de Datos
+# Configuración DB
 user = os.getenv('MYSQL_USER')
 password = os.getenv('MYSQL_PASSWORD')
 db_name = os.getenv('MYSQL_DATABASE')
@@ -24,30 +23,33 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
-# Modelo de Datos
+# --- TAREA 1: MODELO DE DATOS ---
 class Concert(db.Model):
     __tablename__ = 'concerts'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=True)
-    date = db.Column(db.String(50), nullable=False)
+    date = db.Column(db.String(50), nullable=False) # Usamos String para simplificar la entrega inicial
     price = db.Column(db.Float, nullable=False)
     stock = db.Column(db.Integer, nullable=False)
     image_url = db.Column(db.String(255), nullable=True)
 
-# Crear tablas y datos de prueba
+# --- TAREA 2 y 3: CREACIÓN DE TABLAS Y SEED DE DATOS ---
 with app.app_context():
-    print("Verificando base de datos...")
-    db.create_all()
+    db.create_all() # Crea la tabla si no existe
+    
+    # Verificamos si ya hay conciertos para no duplicarlos cada vez que reinicies
     if Concert.query.count() == 0:
-        print("Insertando datos de prueba...")
-        c1 = Concert(name="Duki", date="2024-12-10", price=45000, stock=100)
-        c2 = Concert(name="Wos", date="2024-11-15", price=35000, stock=50)
-        db.session.add_all([c1, c2])
+        test_concerts = [
+            Concert(name="Duki - ADA Tour", description="El trap argentino llega al estadio.", date="2024-12-10", price=45000.0, stock=100, image_url="https://via.placeholder.com/150"),
+            Concert(name="Wos - Descartable", description="Presentación del nuevo disco.", date="2024-11-15", price=35000.0, stock=50, image_url="https://via.placeholder.com/150"),
+            Concert(name="Babasónicos", description="Show íntimo en el Luna Park.", date="2024-10-20", price=28000.0, stock=20, image_url="https://via.placeholder.com/150")
+        ]
+        db.session.bulk_save_objects(test_concerts)
         db.session.commit()
-    print("Base de datos lista.")
+        print("Base de datos inicializada con conciertos de prueba.")
 
-# Endpoints
+# --- ENDPOINT DE STATUS (Existente) ---
 @app.route('/api/status', methods=['GET'])
 def get_status():
     db.session.execute(text('SELECT 1'))
@@ -61,39 +63,29 @@ def get_concerts():
 @app.route('/api/purchase', methods=['POST'])
 def purchase_ticket():
     try:
-        data = request.get_json()
-        concert_id = data.get('concert_id')
-        quantity = data.get('quantity', 1)
-
-        # 1. Buscar el concierto
-        concert = Concert.query.get(concert_id)
-
-        if not concert:
-            return jsonify({"message": "Concierto no encontrado"}), 404
-
-        # 2. VALIDACIÓN CRUCIAL: ¿Hay suficiente para lo que pide el cliente?
-        if concert.stock < quantity:
-            return jsonify({
-                "message": "Stock insuficiente", 
-                "stock_disponible": concert.stock,
-                "solicitado": quantity
-            }), 400  # <--- Ahora sí devuelve 400 si no alcanza
-
-        # 3. Solo si pasa la validación, restamos
-        concert.stock -= quantity
-        db.session.commit()
-
-        return jsonify({
-            "message": "Compra realizada con éxito",
-            "concierto": concert.name,
-            "nuevo_stock": concert.stock
-        }), 200
-
+        db.session.execute(text('SELECT 1'))
+        return jsonify({"status": "online", "database": "connected"}), 200
     except Exception as e:
-        db.session.rollback() # Si algo falla en la base de datos, cancela la operación
+        return jsonify({"status": "online", "database": "disconnected", "error": str(e)}), 500
+
+# --- TAREA 4: ENDPOINT API PARA LISTAR CONCIERTOS ---
+@app.route('/api/concerts', methods=['GET'])
+def get_concerts():
+    try:
+        concerts = Concert.query.all()
+        # Convertimos los objetos de la DB a una lista de diccionarios (JSON)
+        return jsonify([{
+            "id": c.id,
+            "name": c.name,
+            "description": c.description,
+            "date": c.date,
+            "price": c.price,
+            "stock": c.stock,
+            "image_url": c.image_url
+        } for c in concerts]), 200
+    except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 # ESTA PARTE ES LA MÁS IMPORTANTE: debe estar al ras de la izquierda
 if __name__ == '__main__':
-    print("--- SERVIDOR CORRIENDO EN PORT 5000 ---")
     app.run(debug=True, port=5000)
