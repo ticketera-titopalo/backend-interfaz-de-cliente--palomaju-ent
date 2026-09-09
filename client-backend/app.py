@@ -1,5 +1,5 @@
 import os
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from dotenv import load_dotenv
@@ -8,6 +8,8 @@ from datetime import datetime # Para manejar fechas si decides usar DateTime
 
 # Cargar variables de entorno
 load_dotenv(dotenv_path="../.env")
+
+print("--- INICIANDO CONFIGURACIÓN DEL SERVIDOR ---")
 
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "http://localhost:5173"}})
@@ -50,6 +52,16 @@ with app.app_context():
 # --- ENDPOINT DE STATUS (Existente) ---
 @app.route('/api/status', methods=['GET'])
 def get_status():
+    db.session.execute(text('SELECT 1'))
+    return jsonify({"status": "online", "database": "connected"}), 200
+
+@app.route('/api/concerts', methods=['GET'])
+def get_concerts():
+    concerts = Concert.query.all()
+    return jsonify([{"id": c.id, "name": c.name, "stock": c.stock} for c in concerts]), 200
+
+@app.route('/api/purchase', methods=['POST'])
+def purchase_ticket():
     try:
         db.session.execute(text('SELECT 1'))
         return jsonify({"status": "online", "database": "connected"}), 200
@@ -74,5 +86,6 @@ def get_concerts():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+# ESTA PARTE ES LA MÁS IMPORTANTE: debe estar al ras de la izquierda
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
