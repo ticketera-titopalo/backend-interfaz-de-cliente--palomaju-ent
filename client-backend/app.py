@@ -63,6 +63,34 @@ class User(db.Model):
         }
 
 
+# --- REGISTRO DE COMPRAS ---
+class Purchase(db.Model):
+    """Historial de compras: qué compró cada usuario y a qué hora."""
+    __tablename__ = 'purchases'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    concert_id = db.Column(db.Integer, db.ForeignKey('concerts.id'), nullable=False)
+    quantity = db.Column(db.Integer, nullable=False)
+    total_price = db.Column(db.Numeric(10, 2), nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    user = db.relationship('User', backref=db.backref('purchases', lazy=True))
+    concert = db.relationship('Concert', backref=db.backref('purchases', lazy=True))
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "concert_id": self.concert_id,
+            "concierto": self.concert.name if self.concert else None,
+            "fecha": self.concert.date if self.concert else None,
+            "quantity": self.quantity,
+            "total_price": float(self.total_price),
+            "created_at": self.created_at.isoformat()
+        }
+
+
 # --- CREACIÓN DE TABLAS Y SEED DE DATOS ---
 with app.app_context():
     db.create_all() # Crea la tabla concerts y users si no existen
@@ -163,16 +191,79 @@ def login():
 @app.route('/api/purchase', methods=['POST'])
 @jwt_required()
 def purchase_ticket():
+    data = request.get_json(silent=True) or {}
+    current_user_id = int(get_jwt_identity())
+
+    # 1. Validar que el usuario del token exista
+    user = db.session.get(User, current_user_id)
+    if not user:
+        return jsonify({"message": "Usuario del token no encontrado"}), 401
+
+    concert_id = data.get('concert_id')
+    quantity = data.get('quantity', 1)
+
+    # 2. Validar el payload: concert_id debe ser un entero
     try:
-        # Obtener la identidad del usuario desde el token JWT
-        current_user_id = get_jwt_identity()
-        
+        concert_id = int(concert_id)
+    except (TypeError, ValueError):
+        return jsonify({"message": "concert_id debe ser un número"}), 400
+
+    # 3. Validar que la cantidad sea un entero positivo
+    if not isinstance(quantity, int) or isinstance(quantity, bool) or quantity < 1:
+        return jsonify({"message": "La cantidad debe ser un entero mayor a 0"}), 400
+
+    # 4. Buscar el concierto
+    concert = db.session.get(Concert, concert_id)
+    if not concert:
+        return jsonify({"message": "Concierto no encontrado"}), 404
+
+    # 5. VALIDACIÓN DE STOCK: ¿alcanza para lo que pide el cliente?
+    if concert.stock < quantity:
+        return jsonify({
+            "message": "Stock insuficiente",
+            "stock_disponible": concert.stock,
+            "solicitado": quantity
+        }), 400
+
+    try:
+        # 6. Descontar stock
+        concert.stock -= quantity
+
+        # 7. Registrar la compra
+        purchase = Purchase(
+            user_id=user.id,
+            concert_id=concert.id,
+            quantity=quantity,
+            total_price=round(concert.price * quantity, 2)
+        )
+        db.session.add(purchase)
+        db.session.commit()
+
         return jsonify({
             "message": "Compra realizada con éxito",
-            "user_id": current_user_id
-        }), 200
+            "user_id": user.id,
+            "concierto": concert.name,
+            "quantity": quantity,
+            "total_price": float(purchase.total_price),
+            "nuevo_stock": concert.stock,
+            "purchase_id": purchase.id
+        }), 201
+
     except Exception as e:
+        db.session.rollback()  # Si algo falla, no queda el stock a medias
         return jsonify({"error": str(e)}), 500
+
+
+# Historial de compras del usuario autenticado
+@app.route('/api/user/purchases', methods=['GET'])
+@jwt_required()
+def get_purchases():
+    current_user_id = int(get_jwt_identity())
+
+    purchases = Purchase.query.filter_by(user_id=current_user_id) \
+                               .order_by(Purchase.created_at.desc()).all()
+
+    return jsonify([p.to_dict() for p in purchases]), 200
 
 
 if __name__ == '__main__':
