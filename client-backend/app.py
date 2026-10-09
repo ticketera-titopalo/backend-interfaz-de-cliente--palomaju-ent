@@ -6,6 +6,7 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 from sqlalchemy import text # Para el health check
 from datetime import datetime # Para manejar fechas si decides usar DateTime
+import uuid 
 from werkzeug.security import generate_password_hash, check_password_hash
 
 # Cargar variables de entorno
@@ -89,6 +90,44 @@ class Purchase(db.Model):
             "total_price": float(self.total_price),
             "created_at": self.created_at.isoformat()
         }
+
+
+# --- ENTRADAS / TICKETS POR COMPRA (ISSUE 7) ---
+class Ticket(db.Model):
+    """Una entrada individual. Cada unidad comprada genera un ticket."""
+    __tablename__ = 'tickets'
+
+    id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.String(10), unique=True, nullable=False)
+    purchase_id = db.Column(db.Integer, db.ForeignKey('purchases.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    concert_id = db.Column(db.Integer, db.ForeignKey('concerts.id'), nullable=False)
+    used = db.Column(db.Boolean, default=False, nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    purchase = db.relationship('Purchase', backref=db.backref('tickets', lazy=True))
+    user = db.relationship('User', backref=db.backref('tickets', lazy=True))
+    concert = db.relationship('Concert', backref=db.backref('tickets', lazy=True))
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "code": self.code,
+            "purchase_id": self.purchase_id,
+            "concert_id": self.concert_id,
+            "concierto": self.concert.name if self.concert else None,
+            "fecha": self.concert.date if self.concert else None,
+            "used": self.used,
+            "created_at": self.created_at.isoformat()
+        }
+
+
+def generar_codigo_ticket():
+    """Genera un código único con formato TKT-XXXXXX."""
+    while True:
+        codigo = f"TKT-{uuid.uuid4().hex[:6].upper()}"
+        if not Ticket.query.filter_by(code=codigo).first():
+            return codigo
 
 
 # --- CREACIÓN DE TABLAS Y SEED DE DATOS ---
@@ -237,8 +276,19 @@ def purchase_ticket():
             total_price=round(concert.price * quantity, 2)
         )
         db.session.add(purchase)
-        db.session.commit()
+        db.session.flush()  # Necesario para obtener purchase.id antes de crear los tickets
 
+        # 8. Generar un ticket por cada unidad comprada
+        for _ in range(quantity):
+            ticket = Ticket(
+                code=generar_codigo_ticket(),
+                purchase_id=purchase.id,
+                user_id=user.id,
+                concert_id=concert.id
+            )
+            db.session.add(ticket)
+
+        db.session.commit()
         return jsonify({
             "message": "Compra realizada con éxito",
             "user_id": user.id,
@@ -246,7 +296,8 @@ def purchase_ticket():
             "quantity": quantity,
             "total_price": float(purchase.total_price),
             "nuevo_stock": concert.stock,
-            "purchase_id": purchase.id
+            "purchase_id": purchase.id,
+            "tickets_created": quantity
         }), 201
 
     except Exception as e:
@@ -264,6 +315,38 @@ def get_purchases():
                                .order_by(Purchase.created_at.desc()).all()
 
     return jsonify([p.to_dict() for p in purchases]), 200
+
+
+# Entradas del usuario autenticado
+@app.route('/api/user/tickets', methods=['GET'])
+@jwt_required()
+def get_tickets():
+    current_user_id = int(get_jwt_identity())
+
+    tickets = Ticket.query.filter_by(user_id=current_user_id) \
+                          .order_by(Ticket.created_at.desc()).all()
+
+    return jsonify([t.to_dict() for t in tickets]), 200
+
+
+# Entradas de una compra puntual (solo si es del usuario autenticado)
+@app.route('/api/user/purchases/<int:purchase_id>/tickets', methods=['GET'])
+@jwt_required()
+def get_purchase_tickets(purchase_id):
+    current_user_id = int(get_jwt_identity())
+
+    purchase = db.session.get(Purchase, purchase_id)
+
+    if not purchase:
+        return jsonify({"message": "Compra no encontrada"}), 404
+
+    if purchase.user_id != current_user_id:
+        return jsonify({"message": "No tenés acceso a esta compra"}), 403
+
+    tickets = Ticket.query.filter_by(purchase_id=purchase.id) \
+                          .order_by(Ticket.id.asc()).all()
+
+    return jsonify([t.to_dict() for t in tickets]), 200
 
 
 if __name__ == '__main__':
