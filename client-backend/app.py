@@ -6,6 +6,7 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 from sqlalchemy import text # Para el health check
 from datetime import datetime # Para manejar fechas si decides usar DateTime
+from functools import wraps # Para el decorador admin_required
 import uuid 
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -130,6 +131,20 @@ def generar_codigo_ticket():
             return codigo
 
 
+# --- AUDITORÍA DE CANJE DE ENTRADAS (ISSUE 9) ---
+class TicketRedemption(db.Model):
+    """Registro de auditoría cada vez que el staff canjea una entrada."""
+    __tablename__ = 'ticket_redemptions'
+
+    id = db.Column(db.Integer, primary_key=True)
+    ticket_id = db.Column(db.Integer, db.ForeignKey('tickets.id'), nullable=False)
+    admin_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    redeemed_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    ticket = db.relationship('Ticket', backref=db.backref('redemptions', lazy=True))
+    admin = db.relationship('User', backref=db.backref('redemptions', lazy=True))
+
+
 # --- CREACIÓN DE TABLAS Y SEED DE DATOS ---
 with app.app_context():
     db.create_all() # Crea la tabla concerts y users si no existen
@@ -144,6 +159,19 @@ with app.app_context():
         db.session.bulk_save_objects(test_concerts)
         db.session.commit()
         print("Base de datos inicializada con conciertos de prueba.")
+
+
+# --- DECORADOR DE ROL ADMIN (ISSUE 9) ---
+def admin_required(fn):
+    """Verifica que el usuario autenticado tenga role == 'admin'."""
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        current_user_id = int(get_jwt_identity())
+        user = db.session.get(User, current_user_id)
+        if not user or user.role != 'admin':
+            return jsonify({"message": "Se requieren permisos de administrador"}), 403
+        return fn(*args, **kwargs)
+    return wrapper
 
 
 # --- ENDPOINTS ---
@@ -362,6 +390,72 @@ def get_purchase_tickets(purchase_id):
                           .order_by(Ticket.id.asc()).all()
 
     return jsonify([t.to_dict() for t in tickets]), 200
+
+
+# Validación y redención de entradas en puerta (solo admin)
+@app.route('/api/admin/tickets/validate', methods=['POST'])
+@jwt_required()
+@admin_required
+def validate_ticket():
+    data = request.get_json(silent=True) or {}
+    code = (data.get('code') or '').strip()
+
+    if not code:
+        return jsonify({"message": "El código de la entrada es obligatorio"}), 400
+
+    ticket = Ticket.query.filter_by(code=code).first()
+    if not ticket:
+        return jsonify({"message": "Entrada no encontrada"}), 404
+
+    # Si ya fue utilizada, devolver los datos del canje previo (sin volver a marcar)
+    if ticket.used:
+        previous = (TicketRedemption.query
+                   .filter_by(ticket_id=ticket.id)
+                   .order_by(TicketRedemption.redeemed_at.desc())
+                   .first())
+        return jsonify({
+            "message": "Entrada ya utilizada",
+            "code": ticket.code,
+            "validated_at": previous.redeemed_at.isoformat() if previous else None,
+            "validated_by": previous.admin_user_id if previous else None
+        }), 409
+
+    try:
+        current_user_id = int(get_jwt_identity())
+
+        # Marcar como usada
+        ticket.used = True
+
+        # Registrar el canje para auditoría
+        redemption = TicketRedemption(
+            ticket_id=ticket.id,
+            admin_user_id=current_user_id
+        )
+        db.session.add(redemption)
+        db.session.commit()
+
+        return jsonify({
+            "message": "Entrada validada con éxito",
+            "code": ticket.code,
+            "used": True,
+            "validated_at": redemption.redeemed_at.isoformat(),
+            "validated_by": current_user_id,
+            "ticket_id": ticket.id,
+            "purchase_id": ticket.purchase_id,
+            "propietario": {
+                "user_id": ticket.user_id,
+                "email": ticket.user.email
+            },
+            "concierto": {
+                "id": ticket.concert_id,
+                "name": ticket.concert.name,
+                "date": ticket.concert.date
+            }
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == '__main__':
