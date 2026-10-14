@@ -171,7 +171,22 @@ def get_concerts():
         return jsonify({"error": str(e)}), 500
 
 
-# --- NUEVOS ENDPOINTS DE AUTENTICACIÓN (ISSUE 5) ---
+# Detalle de un concierto por id
+@app.route('/api/concerts/<int:concert_id>', methods=['GET'])
+def get_concert(concert_id):
+    concert = db.session.get(Concert, concert_id)
+    if not concert:
+        return jsonify({"message": "Concierto no encontrado"}), 404
+
+    return jsonify({
+        "id": concert.id,
+        "name": concert.name,
+        "description": concert.description,
+        "date": concert.date,
+        "price": concert.price,
+        "stock": concert.stock,
+        "image_url": concert.image_url
+    }), 200
 
 @app.route('/api/auth/register', methods=['POST'])
 def register():
