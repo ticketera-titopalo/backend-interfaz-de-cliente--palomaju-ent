@@ -11,3 +11,14 @@ class Concert(db.Model):
     price = db.Column(db.Float, nullable=False)
     stock = db.Column(db.Integer, nullable=False)
     image_url = db.Column(db.String(255), nullable=True)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "description": self.description,
+            "date": self.date,
+            "price": self.price,
+            "stock": self.stock,
+            "image_url": self.image_url,
+        }
