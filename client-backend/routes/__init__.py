@@ -1,6 +1,6 @@
 """Blueprints (presentation layer)."""
 
-from . import status, concerts, auth, purchase, tickets, admin
+from . import status, concerts, auth, purchase, tickets, admin, users
 
 
 def register_blueprints(app):
@@ -10,3 +10,4 @@ def register_blueprints(app):
     app.register_blueprint(purchase.bp)
     app.register_blueprint(tickets.bp)
     app.register_blueprint(admin.bp)
+    app.register_blueprint(users.bp)
