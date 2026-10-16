@@ -5,6 +5,7 @@ from .user import User
 from .purchase import Purchase
 from .ticket import Ticket
 from .ticket_redemption import TicketRedemption
+from .revoked_token import RevokedToken
 from .ticket import generar_codigo_ticket
 
 __all__ = [

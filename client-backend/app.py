@@ -15,7 +15,17 @@ def create_app():
     app = Flask(__name__)
     # SEC: la clave viene de entorno (sin fallback).
     app.config["JWT_SECRET_KEY"] = os.environ["JWT_SECRET_KEY"]
+    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = int(
+        os.environ.get("JWT_ACCESS_TOKEN_EXPIRES", 900))
+    app.config["JWT_REFRESH_TOKEN_EXPIRES"] = int(
+        os.environ.get("JWT_REFRESH_TOKEN_EXPIRES", 604800))
     jwt.init_app(app)
+
+    @jwt.token_in_blocklist_loader
+    def check_if_token_revoked(jwt_header, jwt_payload):
+        from models import RevokedToken
+        return RevokedToken.query.filter_by(
+            jti=jwt_payload.get("jti")).first() is not None
 
     database_uri = os.environ.get("DATABASE_URI")
     if database_uri:
