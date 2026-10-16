@@ -2,8 +2,11 @@ def test_concerts_list(client):
     r = client.get("/api/concerts")
     assert r.status_code == 200
     data = r.get_json()
-    assert isinstance(data, list)
-    assert len(data) >= 3
+    assert isinstance(data, dict)
+    assert "concerts" in data and isinstance(data["concerts"], list)
+    assert len(data["concerts"]) >= 3
+    assert "total" in data and "page" in data and "limit" in data
+    assert "total_pages" in data
 
 
 def test_detail_ok(client):
