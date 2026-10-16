@@ -39,8 +39,31 @@ def create_app():
     with app.app_context():
         db.create_all()
         _seed_concerts_if_empty()
+        _migrate_user_profile_columns()
 
     return app
+
+
+def _migrate_user_profile_columns():
+    from sqlalchemy import text
+    cols = ["nombre VARCHAR(80) NULL", "apellido VARCHAR(80) NULL",
+            "dni VARCHAR(20) NULL", "telefono VARCHAR(30) NULL"]
+    # NOTE: UNIQUE index on dni handled separately; keep simple.
+    if db.session.bind is not None and db.session.bind.dialect.name != "mysql":
+        return
+    for col in ["nombre VARCHAR(80) NULL", "apellido VARCHAR(80) NULL",
+                "dni VARCHAR(20) NULL", "telefono VARCHAR(30) NULL"]:
+        try:
+            db.session.execute(text(f"ALTER TABLE users ADD COLUMN {col}"))
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+    # unique index on dni (best effort)
+    try:
+        db.session.execute(text("CREATE UNIQUE INDEX uq_users_dni ON users(dni)"))
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
 
 
 def _seed_concerts_if_empty():
