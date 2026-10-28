@@ -1,0 +1,56 @@
+name: CI - Backend Cliente (Flask)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root_password_aca
+          MYSQL_DATABASE: ticketera_db
+          MYSQL_USER: ticketera_user
+          MYSQL_PASSWORD: ticketera_password
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=5
+
+    env:
+      JWT_SECRET_KEY: test-secret-key-for-ci-only
+      JWT_ACCESS_TOKEN_EXPIRES: "900"
+      JWT_REFRESH_TOKEN_EXPIRES: "604800"
+      FRONTEND_URL: http://localhost:5173
+      MYSQL_USER: ticketera_user
+      MYSQL_PASSWORD: ticketera_password
+      MYSQL_DATABASE: ticketera_db
+      DATABASE_URI: sqlite:///:memory:
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: |
+          cd client-backend
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Run tests
+        run: |
+          cd client-backend
+          pytest -q
+      - name: Coverage report
+        run: |
+          cd client-backend
+          pytest --cov=. --cov-report=xml --cov-fail-under=70
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: client-backend/coverage.xml
+          fail_ci_if_error: false

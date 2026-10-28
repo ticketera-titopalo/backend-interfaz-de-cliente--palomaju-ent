@@ -3,3 +3,6 @@
 __pycache__/
 *.pyc
 venv/
+.coverage
+htmlcov/
+*.egg-info/
