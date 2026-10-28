@@ -1,3 +1,4 @@
+from errors import error
 from flask import Blueprint, jsonify, request
 
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -12,7 +13,7 @@ bp = Blueprint("users", __name__)
 def me():
     user = get_current_user(int(get_jwt_identity()))
     if not user:
-        return jsonify({"message": "Usuario no encontrado"}), 404
+        return error("Usuario no encontrado", 404)
     return jsonify(user.to_profile()), 200
 
 
@@ -23,5 +24,5 @@ def update_me():
     data = request.get_json(silent=True) or {}
     user, msg, status = update_profile(current_user_id, data)
     if msg is not None:
-        return jsonify({"message": msg}), status
+        return error(msg, status)
     return jsonify(user.to_profile()), 200

@@ -1,3 +1,4 @@
+from errors import error
 from flask import Blueprint, jsonify
 
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -33,5 +34,5 @@ def purchase_tickets(purchase_id):
     current_user_id = int(get_jwt_identity())
     tickets, msg, status = tickets_for_purchase(purchase_id, current_user_id)
     if tickets is None:
-        return jsonify({"message": msg}), status
+        return error(msg, status)
     return jsonify([t.to_dict() for t in tickets]), 200

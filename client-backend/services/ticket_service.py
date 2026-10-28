@@ -69,4 +69,4 @@ def validate_ticket(code, admin_user_id):
         return body, 200
     except Exception as exc:
         db.session.rollback()
-        return {"error": str(exc)}, 500
+        return {"error": "Error interno del servidor"}, 500

@@ -1,3 +1,4 @@
+from errors import error
 from flask import Blueprint, jsonify, request
 
 from services.concert_service import (
@@ -29,15 +30,15 @@ def concerts_list():
         limit = None
 
     if page is None or page < 1:
-        return jsonify({"message": "page debe ser entero >= 1"}), 400
+        return error("page debe ser entero >= 1", 400)
     if limit is None or limit < 1 or limit > 100:
-        return jsonify({"message": "limit debe ser entre 1 y 100"}), 400
+        return error("limit debe ser entre 1 y 100", 400)
     if order not in ALLOWED_ORDERS:
-        return jsonify({"message": "order inválido"}), 400
+        return error("order inválido", 400)
     if not is_valid_date(fecha_desde):
-        return jsonify({"message": "fecha_desde invalida"}), 400
+        return error("fecha_desde invalida", 400)
     if not is_valid_date(fecha_hasta):
-        return jsonify({"message": "fecha_hasta invalida"}), 400
+        return error("fecha_hasta invalida", 400)
 
     concerts, total, page, limit, total_pages = search_concerts(
         q=q, fecha_desde=fecha_desde, fecha_hasta=fecha_hasta,
@@ -56,5 +57,5 @@ def concerts_list():
 def concert_detail(concert_id):
     concert = get_concert(concert_id)
     if not concert:
-        return jsonify({"message": "Concierto no encontrado"}), 404
+        return error("Concierto no encontrado", 404)
     return jsonify(concert.to_dict()), 200
