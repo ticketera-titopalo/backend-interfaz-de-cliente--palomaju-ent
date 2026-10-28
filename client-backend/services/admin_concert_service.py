@@ -43,7 +43,7 @@ def create_concert(data):
         return concert, None
     except Exception as exc:
         db.session.rollback()
-        return None, ({"error": str(exc)}, 500)
+        return None, ({"error": "Error interno del servidor"}, 500)
 
 
 def update_concert(concert_id, data):

@@ -40,11 +40,14 @@ def create_app():
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     db.init_app(app)
 
-    CORS(app, resources={r"/api/*": {
-        "origins": os.environ["FRONTEND_URL"],
-    }})
+    origins = [o.strip() for o in os.environ["FRONTEND_URL"].split(",") if o.strip()]
+    if not origins:
+        raise RuntimeError("FRONTEND_URL no definido o vacío")
+    CORS(app, resources={r"/api/*": {"origins": origins}})
 
     register_blueprints(app)
+    from errors import register_error_handlers
+    register_error_handlers(app)
 
     with app.app_context():
         db.create_all()

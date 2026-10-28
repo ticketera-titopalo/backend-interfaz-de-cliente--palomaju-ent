@@ -68,4 +68,4 @@ def buy(concert_id, quantity, user_id):
         return data, None
     except Exception as exc:
         db.session.rollback()
-        return None, {"error": str(exc)}, 500
+        return None, {"error": "Error interno del servidor"}, 500
