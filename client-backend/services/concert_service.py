@@ -36,9 +36,7 @@ def is_valid_date(value):
         return False
 
 
-def search_concerts(q=None, fecha_desde=None, fecha_hasta=None,
-                    order="fecha_asc", page=1, limit=12):
-    query = Concert.query
+def _filter_query(query, q, fecha_desde, fecha_hasta):
     if q:
         pattern = f"%{q}%"
         query = query.filter(
@@ -48,17 +46,20 @@ def search_concerts(q=None, fecha_desde=None, fecha_hasta=None,
         query = query.filter(Concert.date >= fecha_desde)
     if fecha_hasta:
         query = query.filter(Concert.date <= fecha_hasta)
+    return query
 
-    total = query.count()
 
-    order_clause = ALLOWED_ORDERS.get(order)
-    if order_clause is not None:
-        query = query.order_by(order_clause)
-    else:
-        query = query.order_by(Concert.id.asc())
-
+def _paginate(query, order, page, limit):
     page = max(1, int(page))
     limit = max(1, min(int(limit), 100))
+    total = query.count()
+    query = query.order_by(ALLOWED_ORDERS.get(order, Concert.id.asc()))
     concerts = query.offset((page - 1) * limit).limit(limit).all()
     total_pages = (total + limit - 1) // limit if total else 0
     return concerts, total, page, limit, total_pages
+
+
+def search_concerts(q=None, fecha_desde=None, fecha_hasta=None,
+                    order="fecha_asc", page=1, limit=12):
+    query = _filter_query(Concert.query, q, fecha_desde, fecha_hasta)
+    return _paginate(query, order, page, limit)
