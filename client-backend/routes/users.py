@@ -14,7 +14,7 @@ def me():
     user = get_current_user(int(get_jwt_identity()))
     if not user:
         return error("Usuario no encontrado", 404)
-    return jsonify(user.to_profile()), 200
+    return jsonify(user.to_dict()), 200
 
 
 @bp.route("/api/user/me", methods=["PUT"])
@@ -25,4 +25,4 @@ def update_me():
     user, msg, status = update_profile(current_user_id, data)
     if msg is not None:
         return error(msg, status)
-    return jsonify(user.to_profile()), 200
+    return jsonify(user.to_dict()), 200

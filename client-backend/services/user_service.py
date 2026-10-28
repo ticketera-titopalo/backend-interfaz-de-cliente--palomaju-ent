@@ -5,49 +5,67 @@ from models import User
 
 
 FORBIDDEN_FIELDS = {"email", "password", "role", "password_hash", "id"}
+SIMPLE_FIELDS = (("nombre", 80), ("apellido", 80), ("telefono", 30))
+
+
+def _clean(value, max_len):
+    """Devuelve (valor_limpio, error_msg)."""
+    if value is None:
+        return None, None
+    v = str(value).strip()
+    if len(v) > max_len:
+        return None, f"no puede superar {max_len} caracteres"
+    return (v if v != "" else None), None
 
 
 def get_current_user(user_id):
     return db.session.get(User, int(user_id))
 
 
+def _check_forbidden(data):
+    return any(f in (data or {}) for f in FORBIDDEN_FIELDS)
+
+
+def _apply_simple(user, data, field, max_len):
+    if field not in data or data.get(field) is None:
+        return None
+    v, err = _clean(data.get(field), max_len)
+    if err:
+        return f"{field} {err}"
+    setattr(user, field, v)
+    return None
+
+
+def _apply_dni(user, data):
+    if "dni" not in data or data.get("dni") is None:
+        return None
+    v, err = _clean(data.get("dni"), 20)
+    if err:
+        return f"dni {err}"
+    if v is not None:
+        existing = User.query.filter_by(dni=v).first()
+        if existing and existing.id != user.id:
+            return "DNI ya registrado"
+    user.dni = v
+    return None
+
+
 def update_profile(user_id, data):
     user = db.session.get(User, int(user_id))
     if not user:
-        return user, "Usuario no encontrado", 404
-
-    # Campos no editables por esta via
-    if any(f in (data or {}) for f in FORBIDDEN_FIELDS):
+        return None, "Usuario no encontrado", 404
+    data = data or {}
+    if _check_forbidden(data):
         return None, "Campos no editables por esta vía", 400
 
-    data = data or {}
-    # nombre
-    if "nombre" in data and data.get("nombre") is not None:
-        v = str(data.get("nombre")).strip()
-        if len(v) > 80:
-            return None, "nombre no puede superar 80 caracteres", 400
-        user.nombre = v if v != "" else None
-    # apellido
-    if "apellido" in data and data.get("apellido") is not None:
-        v = str(data.get("apellido")).strip()
-        if len(v) > 80:
-            return None, "apellido no puede superar 80 caracteres", 400
-        user.apellido = v if v != "" else None
-    # telefono
-    if "telefono" in data and data.get("telefono") is not None:
-        v = str(data.get("telefono")).strip()
-        if len(v) > 30:
-            return None, "telefono no puede superar 30 caracteres", 400
-        user.telefono = v if v != "" else None
-    # dni
-    if "dni" in data and data.get("dni") is not None:
-        v = str(data.get("dni")).strip()
-        if len(v) > 20:
-            return None, "dni no puede superar 20 caracteres", 400
-        existing = User.query.filter_by(dni=v).first()
-        if existing and existing.id != user.id:
-            return None, "DNI ya registrado", 409
-        user.dni = v if v != "" else None
+    for field, max_len in SIMPLE_FIELDS:
+        msg = _apply_simple(user, data, field, max_len)
+        if msg:
+            return None, msg, 400
+    msg = _apply_dni(user, data)
+    if msg:
+        status = 409 if msg == "DNI ya registrado" else 400
+        return None, msg, status
 
     db.session.commit()
     return user, None, 200
