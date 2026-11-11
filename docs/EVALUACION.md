@@ -36,7 +36,7 @@
 
 | Alumno | Sesiones | Cumplimiento | Pausa | Recencia | IC | Nivel | Para subir de nivel |
 |---|--:|--:|--:|--:|--:|--|--|
-| palojunent | 10 | 39% | 28 d | 64% | **34** | No aprueba | Cumplimiento 39% (mín. 50%) |
+| palojunent | 11 | 43% | 28 d | 100% | **42** | No aprueba | Cumplimiento 43% (mín. 50%) |
 
 > Para aprobar el IC: **2 sesiones por semana** sostenidas, sin pausas mayores a **10 días** y con actividad en las **últimas 2 semanas**. Se excluyen merges, bots y al docente. Zona horaria UTC-3.
 
@@ -155,11 +155,11 @@ Criterios que hoy están en rojo y, para cada uno, una explicación breve de **c
 
 ## 6. Actividad en clase (miércoles y viernes)
 
-> Se consideran las **23 clases** del período (miércoles y viernes, según `config/constancia.json`; feriados y semanas sin clase descontados). `Commits` = commits de trabajo (no-merge); `Merges` = merges de PR (también son push). Los días sin actividad dicen **sin actividad**.
+> Se consideran las **26 clases** del período (miércoles y viernes, según `config/constancia.json`; feriados y semanas sin clase descontados). `Commits` = commits de trabajo (no-merge); `Merges` = merges de PR (también son push). Los días sin actividad dicen **sin actividad**.
 
 ### joaquin ardevol
 
-**9/23 clases con actividad** · 19 commits · 17 merges
+**11/26 clases con actividad** · 29 commits · 28 merges
 
 | Fecha | Actividad | Repositorios | Commits / merges |
 |---|:--:|---|--:|
@@ -186,10 +186,13 @@ Criterios que hoy están en rojo y, para cada uno, una explicación breve de **c
 | 2026-10-23 | **Sí** | frontend_interface-client-JoacoArdevol | 0 / 2 |
 | 2026-10-28 | **Sí** | frontend_interface-client-JoacoArdevol | 5 / 4 |
 | 2026-10-30 | **Sí** | frontend_interface-client-JoacoArdevol | 7 / 5 |
+| 2026-11-04 | No | sin actividad | 0 / 0 |
+| 2026-11-06 | **Sí** | frontend_interface-client-JoacoArdevol | 1 / 3 |
+| 2026-11-11 | **Sí** | frontend-interface-administracion-joacoardevol | 9 / 8 |
 
 ### palojunent
 
-**12/23 clases con actividad** · 22 commits · 19 merges
+**14/26 clases con actividad** · 40 commits · 32 merges
 
 | Fecha | Actividad | Repositorios | Commits / merges |
 |---|:--:|---|--:|
@@ -216,6 +219,9 @@ Criterios que hoy están en rojo y, para cada uno, una explicación breve de **c
 | 2026-10-23 | **Sí** | backend-interfaz-de-cliente--palomaju-ent | 0 / 1 |
 | 2026-10-28 | **Sí** | backend-interfaz-de-cliente--palomaju-ent | 3 / 3 |
 | 2026-10-30 | **Sí** | backend-interfaz-de-administraci-n-palomajunent | 4 / 1 |
+| 2026-11-04 | No | sin actividad | 0 / 0 |
+| 2026-11-06 | **Sí** | backend-interfaz-de-administraci-n-palomajunent | 14 / 8 |
+| 2026-11-11 | **Sí** | backend-interfaz-de-administraci-n-palomajunent | 4 / 5 |
 
 ## 7. Anexo: dónde mirar
 
