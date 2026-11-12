@@ -37,26 +37,31 @@ def _validate_pagination(page, limit):
     return None
 
 
+def _raw_params():
+    q_raw = request.args.get("q")
+    order_raw = request.args.get("order")
+    return {
+        "q": q_raw.strip() if q_raw and q_raw.strip() else None,
+        "fecha_desde": request.args.get("fecha_desde") or None,
+        "fecha_hasta": request.args.get("fecha_hasta") or None,
+        "order": order_raw.strip() if order_raw else "fecha_asc",
+        "page": _parse_int(request.args.get("page", DEFAULT_PAGE)),
+        "limit": _parse_int(request.args.get("limit", DEFAULT_LIMIT)),
+    }
+
+
 def _collect_params():
     """Devuelve (params, error_response)."""
-    q = (request.args.get("q") or "").strip() or None
-    fecha_desde = request.args.get("fecha_desde") or None
-    fecha_hasta = request.args.get("fecha_hasta") or None
-    order = (request.args.get("order") or "fecha_asc").strip()
-    page = _parse_int(request.args.get("page", DEFAULT_PAGE))
-    limit = _parse_int(request.args.get("limit", DEFAULT_LIMIT))
-
-    if order not in ALLOWED_ORDERS:
+    params = _raw_params()
+    if params["order"] not in ALLOWED_ORDERS:
         return None, error("order inválido", 400)
-    err = _validate_dates(fecha_desde, fecha_hasta) or \
-        _validate_pagination(page, limit)
+    err = _validate_dates(params["fecha_desde"], params["fecha_hasta"])
     if err:
         return None, err
-
-    return {
-        "q": q, "fecha_desde": fecha_desde, "fecha_hasta": fecha_hasta,
-        "order": order, "page": page, "limit": limit,
-    }, None
+    err = _validate_pagination(params["page"], params["limit"])
+    if err:
+        return None, err
+    return params, None
 
 
 @bp.route("/api/concerts", methods=["GET"])

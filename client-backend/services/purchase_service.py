@@ -12,24 +12,36 @@ def _fail(msg, status=400, extra=None):
     return body, status
 
 
+def _is_positive_int(value):
+    return isinstance(value, int) and not isinstance(value, bool) and value >= 1
+
+
 def _parse_payload(concert_id, quantity):
     """Devuelve (concert_id_int, error)."""
+    if isinstance(concert_id, bool):
+        return None, _fail("concert_id debe ser un número", 400)
     try:
         pk = int(concert_id)
     except (TypeError, ValueError):
         return None, _fail("concert_id debe ser un número", 400)
-    if not isinstance(quantity, int) or isinstance(quantity, bool) or quantity < 1:
+    if not _is_positive_int(quantity):
         return None, _fail("La cantidad debe ser un entero mayor a 0", 400)
     return pk, None
 
 
-def _check_stock(concert, quantity):
+def _resolve_entities(user_id, concert_id, quantity):
+    user = db.session.get(User, int(user_id))
+    if not user:
+        return None, None, _fail("Usuario del token no encontrado", 401)
+    concert = db.session.get(Concert, concert_id)
+    if not concert:
+        return None, None, _fail("Concierto no encontrado", 404)
     if concert.stock < quantity:
-        return _fail("Stock insuficiente", 400, {
+        return None, None, _fail("Stock insuficiente", 400, {
             "stock_disponible": concert.stock,
             "solicitado": quantity,
         })
-    return None
+    return user, concert, None
 
 
 def _emitir_tickets(purchase, user_id, concert_id, quantity):
@@ -60,13 +72,7 @@ def buy(concert_id, quantity, user_id):
     if err:
         return None, err
 
-    user = db.session.get(User, int(user_id))
-    if not user:
-        return None, _fail("Usuario del token no encontrado", 401)
-    concert = db.session.get(Concert, pk)
-    if not concert:
-        return None, _fail("Concierto no encontrado", 404)
-    err = _check_stock(concert, quantity)
+    user, concert, err = _resolve_entities(user_id, pk, quantity)
     if err:
         return None, err
 
