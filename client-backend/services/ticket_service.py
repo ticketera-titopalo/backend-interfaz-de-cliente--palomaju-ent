@@ -59,19 +59,29 @@ def _build_already_used(ticket, previous):
     }
 
 
-def validate_ticket(code, admin_user_id):
-    code = (code or "").strip()
+def _resolve_ticket_for_validation(raw_code):
+    code = raw_code.strip() if isinstance(raw_code, str) else ""
     if not code:
-        return {"message": "El código de la entrada es obligatorio"}, 400
+        return None, ({"message": "El código de la entrada es obligatorio"}, 400)
     ticket = Ticket.query.filter_by(code=code).first()
     if not ticket:
-        return {"message": "Entrada no encontrada"}, 404
+        return None, ({"message": "Entrada no encontrada"}, 404)
     if ticket.used:
-        return _build_already_used(ticket, _previous_redemption(ticket.id)), 409
+        err_body = _build_already_used(ticket, _previous_redemption(ticket.id))
+        return None, (err_body, 409)
+    return ticket, None
+
+
+def validate_ticket(code, admin_user_id):
+    ticket, err = _resolve_ticket_for_validation(code)
+    if err:
+        return err
     try:
         ticket.used = True
-        redemption = TicketRedemption(ticket_id=ticket.id,
-                                     admin_user_id=int(admin_user_id))
+        redemption = TicketRedemption(
+            ticket_id=ticket.id,
+            admin_user_id=int(admin_user_id),
+        )
         db.session.add(redemption)
         db.session.commit()
         return _build_success(ticket, redemption, admin_user_id), 200

@@ -29,10 +29,12 @@ def get_concert(concert_id):
 def is_valid_date(value):
     if not value:
         return True
+    if not isinstance(value, str) or len(value) != 10:
+        return False
     try:
         datetime.strptime(value, "%Y-%m-%d")
         return True
-    except (ValueError, TypeError):
+    except ValueError:
         return False
 
 
@@ -59,7 +61,16 @@ def _paginate(query, order, page, limit):
     return concerts, total, page, limit, total_pages
 
 
-def search_concerts(q=None, fecha_desde=None, fecha_hasta=None,
-                    order="fecha_asc", page=1, limit=12):
-    query = _filter_query(Concert.query, q, fecha_desde, fecha_hasta)
-    return _paginate(query, order, page, limit)
+def search_concerts(**filters):
+    query = _filter_query(
+        Concert.query,
+        filters.get("q"),
+        filters.get("fecha_desde"),
+        filters.get("fecha_hasta"),
+    )
+    return _paginate(
+        query,
+        filters.get("order", "fecha_asc"),
+        filters.get("page", 1),
+        filters.get("limit", 12),
+    )

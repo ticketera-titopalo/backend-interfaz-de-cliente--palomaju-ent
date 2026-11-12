@@ -22,12 +22,12 @@ def get_current_user(user_id):
     return db.session.get(User, int(user_id))
 
 
-def _check_forbidden(data):
-    return any(f in (data or {}) for f in FORBIDDEN_FIELDS)
+def _has_editable_value(data, field):
+    return field in data and data.get(field) is not None
 
 
 def _apply_simple(user, data, field, max_len):
-    if field not in data or data.get(field) is None:
+    if not _has_editable_value(data, field):
         return None
     v, err = _clean(data.get(field), max_len)
     if err:
@@ -36,35 +36,46 @@ def _apply_simple(user, data, field, max_len):
     return None
 
 
+def _is_dni_taken(user_id, dni):
+    if dni is None:
+        return False
+    existing = User.query.filter_by(dni=dni).first()
+    return bool(existing and existing.id != user_id)
+
+
 def _apply_dni(user, data):
-    if "dni" not in data or data.get("dni") is None:
+    if not _has_editable_value(data, "dni"):
         return None
     v, err = _clean(data.get("dni"), 20)
     if err:
         return f"dni {err}"
-    if v is not None:
-        existing = User.query.filter_by(dni=v).first()
-        if existing and existing.id != user.id:
-            return "DNI ya registrado"
+    if _is_dni_taken(user.id, v):
+        return "DNI ya registrado"
     user.dni = v
     return None
+
+
+def _apply_all_fields(user, data):
+    for field, max_len in SIMPLE_FIELDS:
+        msg = _apply_simple(user, data, field, max_len)
+        if msg:
+            return msg, 400
+    msg = _apply_dni(user, data)
+    if msg:
+        return msg, (409 if msg == "DNI ya registrado" else 400)
+    return None, 200
 
 
 def update_profile(user_id, data):
     user = db.session.get(User, int(user_id))
     if not user:
         return None, "Usuario no encontrado", 404
-    data = data or {}
-    if _check_forbidden(data):
+    payload = data or {}
+    if any(f in payload for f in FORBIDDEN_FIELDS):
         return None, "Campos no editables por esta vía", 400
 
-    for field, max_len in SIMPLE_FIELDS:
-        msg = _apply_simple(user, data, field, max_len)
-        if msg:
-            return None, msg, 400
-    msg = _apply_dni(user, data)
+    msg, status = _apply_all_fields(user, payload)
     if msg:
-        status = 409 if msg == "DNI ya registrado" else 400
         return None, msg, status
 
     db.session.commit()
