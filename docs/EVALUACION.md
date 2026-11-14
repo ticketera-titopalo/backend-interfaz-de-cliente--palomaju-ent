@@ -3,7 +3,7 @@
 
 > Documento **generado automáticamente** por la cátedra de Programación III (RepoSense + análisis de calidad + constancia). **No editar a mano**: se regenera en cada evaluación.
 > Rama evaluada: `main`. Análisis **heurístico** (regex + métricas): es una criba para orientar la revisión, **no una nota**.
-> Generado: 2026-11-13.
+> Generado: 2026-11-14.
 
 ## 1. Veredicto
 
@@ -36,7 +36,7 @@
 
 | Alumno | Sesiones | Cumplimiento | Pausa | Recencia | IC | Nivel | Para subir de nivel |
 |---|--:|--:|--:|--:|--:|--|--|
-| palojunent | 12 | 46% | 28 d | 93% | **43** | No aprueba | Cumplimiento 46% (mín. 50%) |
+| palojunent | 13 | 49% | 28 d | 100% | **46** | No aprueba | Cumplimiento 49% (mín. 50%) |
 
 > Para aprobar el IC: **2 sesiones por semana** sostenidas, sin pausas mayores a **10 días** y con actividad en las **últimas 2 semanas**. Se excluyen merges, bots y al docente. Zona horaria UTC-3.
 
@@ -152,7 +152,7 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 
 ### joaquin ardevol
 
-**11/27 clases con actividad** · total del período: 29 commits · 28 merges
+**12/27 clases con actividad** · total del período: 30 commits · 29 merges
 
 | Fecha | Actividad | Repositorios | Commits / merges |
 |---|:--:|---|--:|
@@ -182,13 +182,13 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 | 2026-11-04 | No | sin actividad | 0 / 0 |
 | 2026-11-06 | **Sí** | frontend_interface-client-JoacoArdevol | 1 / 3 |
 | 2026-11-11 | **Sí** | frontend-interface-administracion-joacoardevol | 9 / 8 |
-| 2026-11-13 | No | sin actividad | 0 / 0 |
+| 2026-11-13 | **Sí** | frontend-interface-administracion-joacoardevol | 1 / 1 |
 
 **Fuera de clase:** sin actividad registrada.
 
 ### palojunent
 
-**14/27 clases con actividad** · total del período: 40 commits · 31 merges
+**15/27 clases con actividad** · total del período: 43 commits · 34 merges
 
 | Fecha | Actividad | Repositorios | Commits / merges |
 |---|:--:|---|--:|
@@ -218,7 +218,7 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 | 2026-11-04 | No | sin actividad | 0 / 0 |
 | 2026-11-06 | **Sí** | backend-interfaz-de-administraci-n-palomajunent | 14 / 8 |
 | 2026-11-11 | **Sí** | backend-interfaz-de-administraci-n-palomajunent | 4 / 4 |
-| 2026-11-13 | No | sin actividad | 0 / 0 |
+| 2026-11-13 | **Sí** | backend-interfaz-de-administraci-n-palomajunent | 3 / 3 |
 
 **Fuera de clase:** 1 fecha(s) con actividad · 3 commits · 4 merges
 
