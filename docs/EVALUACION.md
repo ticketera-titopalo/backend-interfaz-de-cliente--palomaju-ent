@@ -3,7 +3,7 @@
 
 > Documento **generado automáticamente** por la cátedra de Programación III (RepoSense + análisis de calidad + constancia). **No editar a mano**: se regenera en cada evaluación.
 > Rama evaluada: `main`. Análisis **heurístico** (regex + métricas): es una criba para orientar la revisión, **no una nota**.
-> Generado: 2026-11-14.
+> Generado: 2026-11-16.
 
 ## 1. Veredicto
 
@@ -36,7 +36,7 @@
 
 | Alumno | Sesiones | Cumplimiento | Pausa | Recencia | IC | Nivel | Para subir de nivel |
 |---|--:|--:|--:|--:|--:|--|--|
-| palojunent | 13 | 49% | 28 d | 100% | **46** | No aprueba | Cumplimiento 49% (mín. 50%) |
+| palojunent | 14 | 52% | 28 d | 86% | **46** | Aprueba | Cumplimiento 52% (mín. 100%); Pausa 28 d (máx. 5 d) |
 
 > Para aprobar el IC: **2 sesiones por semana** sostenidas, sin pausas mayores a **10 días** y con actividad en las **últimas 2 semanas**. Se excluyen merges, bots y al docente. Zona horaria UTC-3.
 
@@ -184,11 +184,15 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 | 2026-11-11 | **Sí** | frontend-interface-administracion-joacoardevol | 9 / 8 |
 | 2026-11-13 | **Sí** | frontend-interface-administracion-joacoardevol | 1 / 1 |
 
-**Fuera de clase:** sin actividad registrada.
+**Fuera de clase:** 1 fecha(s) con actividad · 2 commits · 2 merges
+
+| Fecha | Repositorios | Commits / merges |
+|---|---|--:|
+| 2026-11-15 | frontend-interface-administracion-joacoardevol, frontend_interface-client-JoacoArdevol | 2 / 2 |
 
 ### palojunent
 
-**15/27 clases con actividad** · total del período: 43 commits · 34 merges
+**15/27 clases con actividad** · total del período: 43 commits · 32 merges
 
 | Fecha | Actividad | Repositorios | Commits / merges |
 |---|:--:|---|--:|
@@ -218,13 +222,15 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 | 2026-11-04 | No | sin actividad | 0 / 0 |
 | 2026-11-06 | **Sí** | backend-interfaz-de-administraci-n-palomajunent | 14 / 8 |
 | 2026-11-11 | **Sí** | backend-interfaz-de-administraci-n-palomajunent | 4 / 4 |
-| 2026-11-13 | **Sí** | backend-interfaz-de-administraci-n-palomajunent | 3 / 3 |
+| 2026-11-13 | **Sí** | backend-interfaz-de-administraci-n-palomajunent | 3 / 1 |
 
-**Fuera de clase:** 1 fecha(s) con actividad · 3 commits · 4 merges
+**Fuera de clase:** 3 fecha(s) con actividad · 5 commits · 10 merges
 
 | Fecha | Repositorios | Commits / merges |
 |---|---|--:|
 | 2026-11-12 | backend-interfaz-de-administraci-n-palomajunent, backend-interfaz-de-cliente--palomaju-ent | 3 / 4 |
+| 2026-11-14 | backend-interfaz-de-administraci-n-palomajunent | 2 / 3 |
+| 2026-11-15 | backend-interfaz-de-administraci-n-palomajunent | 0 / 3 |
 
 ## 7. Anexo: dónde mirar
 
