@@ -236,15 +236,18 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 | 2026-11-14 | backend-interfaz-de-administraci-n-palomajunent | 2 / 3 |
 | 2026-11-15 | backend-interfaz-de-administraci-n-palomajunent | 0 / 3 |
 
-## 7. Anexo: dónde mirar
+## 7. Anexo: archivos donde se originan los problemas
 
-Archivos donde el análisis encontró cada señal en rojo (sin número de línea, a propósito):
+Se listan los archivos y líneas que el análisis marca para cada criterio en rojo. Para **duplicación** se muestran los archivos con más líneas repetidas; para **cobertura**, las unidades por debajo del umbral.
 
-**Complejidad alta (Compl)** — 3 archivo(s):
-- `client-backend/routes/concerts.py`
-- `client-backend/services/admin_concert_service.py`
-- `client-backend/services/auth_service.py`
+**Complejidad alta (Compl)** — 6 hallazgo(s) en 3 archivo(s):
+
+| Archivo | Línea(s) | Señal |
+|---|---|---|
+| `client-backend/routes/concerts.py` | 32, 40 | función '_validate_pagination' con complejidad 6 |
+| `client-backend/services/admin_concert_service.py` | 89 | función '_apply_updates' con complejidad 6 |
+| `client-backend/services/auth_service.py` | 18, 50, 60 | función '_validate_credentials_format' con complejidad 7 |
 
 ---
-_Informe generado por la cátedra. Los umbrales corresponden al perfil `exigente`. Ante dudas, revisá el archivo señalado y el criterio en `CRITERIOS-CALIDAD.md`._
+_Informe generado por la cátedra. Los umbrales corresponden al perfil `exigente`. Ante dudas, revisá el archivo y la línea señalados y el criterio en `CRITERIOS-CALIDAD.md`._
 <!-- evaluacion:fin -->
