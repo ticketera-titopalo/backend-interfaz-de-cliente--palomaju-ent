@@ -240,15 +240,23 @@ Cada aspecto indica **qué mide**, **por qué importa** y **tu resultado**. Cuan
 
 ## 7. Anexo: archivos donde se originan los problemas
 
-Se listan los archivos y líneas que el análisis marca para cada criterio en rojo. Para **duplicación** se muestran los archivos con más líneas repetidas; para **cobertura**, las unidades por debajo del umbral.
+Se listan **todos** los archivos y líneas que el análisis marca para cada criterio en rojo. Para **duplicación** se muestran los archivos con líneas repetidas; para **cobertura**, las unidades por debajo del umbral.
+
+**Resumen por archivo** — archivos con más hallazgos:
+
+| Archivo | Hallazgos | Peso total | Señales |
+|---|---:|---:|---|
+| `client-backend/services/auth_service.py` | 3 | 15 | high_complexity |
+| `client-backend/routes/concerts.py` | 2 | 10 | high_complexity |
+| `client-backend/services/admin_concert_service.py` | 2 | 9 | high_complexity, long_params |
 
 **Complejidad alta (Compl)** — 6 hallazgo(s) en 3 archivo(s):
 
-| Archivo | Línea(s) | Señal |
-|---|---|---|
-| `client-backend/routes/concerts.py` | 32, 40 | función '_validate_pagination' con complejidad 6 |
-| `client-backend/services/admin_concert_service.py` | 89 | función '_apply_updates' con complejidad 6 |
-| `client-backend/services/auth_service.py` | 18, 50, 60 | función '_validate_credentials_format' con complejidad 7 |
+| Archivo | Línea(s) | Señal | Detalle |
+|---|---|---|---|
+| `client-backend/routes/concerts.py` | 32, 40 | high_complexity | función '_validate_pagination' con complejidad 6 |
+| `client-backend/services/admin_concert_service.py` | 89 | high_complexity | función '_apply_updates' con complejidad 6 |
+| `client-backend/services/auth_service.py` | 18, 50, 60 | high_complexity | función '_validate_credentials_format' con complejidad 7 |
 
 ---
 _Informe generado por la cátedra. Los umbrales corresponden al perfil `exigente`. Ante dudas, revisá el archivo y la línea señalados y el criterio en `CRITERIOS-CALIDAD.md`._
